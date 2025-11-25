@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations - LeadFlow CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .integration-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        .integration-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        }
+        .platform-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .google-ads { background: linear-gradient(135deg, #4285F4, #34A853); }
+        .facebook { background: linear-gradient(135deg, #1877F2, #0866FF); }
+        .custom { background: linear-gradient(135deg, #667eea, #764ba2); }
+        
+        .webhook-url-container {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .webhook-url {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .copy-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .stat-item {
+            flex: 1;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>LeadFlow</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="index.html" class="nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Leads</span>
+                </a>
+                <a href="import.html" class="nav-item">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Import Leads</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <i class="fa-solid fa-plug"></i>
+                    <span>Integrations</span>
+                </a>
+                <a href="admin.html" class="nav-item">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Team Management</span>
+                </a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div class="info">
+                    <span class="name" id="user-name">Admin</span>
+                    <span class="role" id="user-role">admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Integrations</h1>
+                <button class="btn-primary" onclick="showAddIntegrationModal()">
+                    <i class="fa-solid fa-plus"></i> Add Integration
+                </button>
+            </header>
+
+            <div class="view-container">
+                <div id="integrations-list" class="integrations-grid"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Integration Modal -->
+    <div id="integration-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Add New Integration</h2>
+            <div style="margin: 1.5rem 0;">
+                <label>Integration Name</label>
+                <input type="text" id="integration-name" placeholder="e.g., Google Ads Campaign 1" style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 0.5rem; color: var(--text-main); margin-top: 0.5rem;">
+            </div>
+            <div style="margin: 1.5rem 0;">
+                <label>Platform</label>
+                <select id="integration-platform" style="width: 100%; padding: 0.75rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 0.5rem; color: var(--text-main); margin-top: 0.5rem;">
+                    <option value="google_ads">Google Ads</option>
+                    <option value="facebook">Facebook Lead Ads</option>
+                    <option value="custom">Custom Webhook</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="createIntegration()">Create Integration</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        // Check auth
+        fetch('api/auth.php?action=check')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated || data.user.role !== 'admin') {
+                    window.location.href = 'index.html';
+                }
+            });
+
+        loadIntegrations();
+
+        async function loadIntegrations() {
+            try {
+                const response = await fetch('api/integrations.php');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderIntegrations(data.integrations);
+                }
+            } catch (error) {
+                console.error('Error loading integrations:', error);
+            }
+        }
+
+        function renderIntegrations(integrations) {
+            const container = document.getElementById('integrations-list');
+
+            if (integrations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-plug" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <h3>No Integrations Yet</h3>
+                        <p>Connect your lead sources to start receiving leads automatically</p>
+                        <button class="btn-primary" onclick="showAddIntegrationModal()" style="margin-top: 1rem;">
+                            <i class="fa-solid fa-plus"></i> Add Your First Integration
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = integrations.map(integration => {
+                const platformInfo = getPlatformInfo(integration.platform);
+                const webhookUrl = `${window.location.origin}/crm/api/webhook.php?token=${integration.webhook_token}`;
+                const lastUsed = integration.last_used_at ? new Date(integration.last_used_at).toLocaleDateString() : 'Never';
+
+                return `
+                    <div class="integration-card">
+                        <div class="platform-icon ${integration.platform}">
+                            <i class="${platformInfo.icon}"></i>
+                        </div>
+                        <h3>${integration.name}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">${platformInfo.label}</p>
+
+                        <div class="webhook-url-container">
+                            <input type="text" class="webhook-url" value="${webhookUrl}" readonly>
+                            <button class="copy-btn" onclick="copyWebhookUrl('${webhookUrl}')">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${integration.leads_received}</div>
+                                <div class="stat-label">Leads Received</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${lastUsed}</div>
+                                <div class="stat-label">Last Used</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                            <button class="btn-secondary" onclick="testWebhook(${integration.id})" style="flex: 1;">
+                                <i class="fa-solid fa-flask"></i> Test
+                            </button>
+                            <button class="btn-danger" onclick="deleteIntegration(${integration.id})" style="flex: 1;">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getPlatformInfo(platform) {
+            const platforms = {
+                google_ads: { label: 'Google Ads', icon: 'fa-brands fa-google' },
+                facebook: { label: 'Facebook Lead Ads', icon: 'fa-brands fa-facebook' },
+                custom: { label: 'Custom Webhook', icon: 'fa-solid fa-code' }
+            };
+            return platforms[platform] || platforms.custom;
+        }
+
+        function showAddIntegrationModal() {
+            document.getElementById('integration-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('integration-modal').style.display = 'none';
+        }
+
+        async function createIntegration() {
+            const name = document.getElementById('integration-name').value;
+            const platform = document.getElementById('integration-platform').value;
+
+            if (!name) {
+                alert('Please enter an integration name');
+                return;
+            }
+
+            try {
+                const response = await fetch('api/integrations.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, platform })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeModal();
+                    loadIntegrations();
+                    document.getElementById('integration-name').value = '';
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to create integration'));
+                }
+            } catch (error) {
+                alert('Error creating integration: ' + error.message);
+            }
+        }
+
+        async function deleteIntegration(id) {
+            if (!confirm('Are you sure you want to delete this integration?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`api/integrations.php?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    loadIntegrations();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete integration'));
+                }
+            } catch (error) {
+                alert('Error deleting integration: ' + error.message);
+            }
+        }
+
+        function copyWebhookUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Webhook URL copied to clipboard!');
+            });
+        }
+
+        async function testWebhook(id) {
+            alert('Test webhook feature coming soon! Use tools like Postman or curl to test your webhook URL.');
+        }
+    </script>
+</body>
+</html>

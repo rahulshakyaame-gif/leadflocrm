@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Test - LeadFlow CRM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 LeadFlow CRM System Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Database Connection</h2>
+        <button onclick="testDatabase()">Test Database</button>
+        <div id="db-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Authentication System</h2>
+        <button onclick="testAuth()">Test Auth</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Integrations Table</h2>
+        <button onclick="testIntegrations()">Test Integrations</button>
+        <div id="integrations-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Create Test Integration</h2>
+        <button onclick="createTestIntegration()">Create Test Integration</button>
+        <div id="integration-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Webhook</h2>
+        <p>First create an integration above, then test the webhook:</p>
+        <button onclick="testWebhook()" id="test-webhook-btn" disabled>Test Webhook (Create Integration First)</button>
+        <div id="webhook-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Test Facebook Lead Ads 📱</h2>
+        <p>Test with Facebook Lead Ads payload format:</p>
+        <button onclick="createFacebookIntegration()">Create Facebook Integration</button>
+        <button onclick="testFacebookWebhook()" id="test-facebook-btn" disabled>Test Facebook Lead</button>
+        <div id="facebook-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>7. Test Google Ads 🔍</h2>
+        <p>Test with Google Ads payload format:</p>
+        <button onclick="createGoogleIntegration()">Create Google Ads Integration</button>
+        <button onclick="testGoogleWebhook()" id="test-google-btn" disabled>Test Google Lead</button>
+        <div id="google-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Links</h2>
+        <button onclick="window.location.href='login.html'">Go to Login</button>
+        <button onclick="window.location.href='index.html'">Go to Dashboard</button>
+        <button onclick="window.location.href='integrations.html'">Go to Integrations</button>
+    </div>
+
+    <script>
+        async function testDatabase() {
+            const result = document.getElementById('db-result');
+            try {
+                const response = await fetch('api/auth.php?action=check');
+                const data = await response.json();
+                result.innerHTML = `<div class="test-result success">✅ Database Connected</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Database Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAuth() {
+            const result = document.getElementById('auth-result');
+            try {
+                const response = await fetch('api/auth.php?action=check');
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Logged in as: ${data.user.name} (${data.user.role})
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Not logged in. <a href="login.html" style="color: white;">Go to Login</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Auth Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testIntegrations() {
+            const result = document.getElementById('integrations-result');
+            try {
+                const response = await fetch('api/integrations.php');
+                
+                if (response.status === 401) {
+                    result.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Not logged in. Please <a href="login.html" style="color: white;">login as admin</a> first.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Integrations API Working<br>
+                            Found ${data.integrations.length} integration(s)
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        let currentToken = null;
+
+        async function createTestIntegration() {
+            const result = document.getElementById('integration-result');
+            try {
+                const response = await fetch('api/integrations.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test Integration ' + new Date().toLocaleTimeString(),
+                        platform: 'custom'
+                    })
+                });
+
+                if (response.status === 401) {
+                    result.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Not logged in. Please <a href="login.html" style="color: white;">login as admin</a> first.
+                        </div>
+                    `;
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentToken = data.integration.webhook_token;
+                    const webhookUrl = window.location.origin + '/crm/api/webhook.php?token=' + currentToken;
+                    
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Integration Created!<br><br>
+                            <strong>Webhook URL:</strong><br>
+                            <input type="text" value="${webhookUrl}" readonly 
+                                style="width: 100%; padding: 10px; margin: 10px 0; background: #1a1a2e; color: white; border: 1px solid #0f3460; border-radius: 5px;">
+                            <button onclick="copyToClipboard('${webhookUrl}')">📋 Copy URL</button>
+                            <br><br>
+                            <strong>Token:</strong> <code style="background: #1a1a2e; padding: 5px; border-radius: 3px;">${currentToken}</code>
+                        </div>
+                    `;
+                    
+                    document.getElementById('test-webhook-btn').disabled = false;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWebhook() {
+            const result = document.getElementById('webhook-result');
+            
+            if (!currentToken) {
+                result.innerHTML = `<div class="test-result error">❌ Please create an integration first!</div>`;
+                return;
+            }
+
+            try {
+                const testPayload = {
+                    name: 'Test Lead from Webhook',
+                    email: 'test@example.com',
+                    phone: '555-0123'
+                };
+
+                const response = await fetch(`api/webhook.php?token=${currentToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testPayload)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Webhook Test Successful!<br>
+                            Lead created with ID: ${data.lead_id}<br><br>
+                            <a href="index.html" style="color: white;">View in Dashboard</a>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Webhook URL copied to clipboard!');
+            });
+        }
+
+        // Facebook Lead Ads Testing
+        let facebookToken = null;
+
+        async function createFacebookIntegration() {
+            const result = document.getElementById('facebook-result');
+            try {
+                const response = await fetch('api/integrations.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Facebook Lead Ads ' + new Date().toLocaleTimeString(),
+                        platform: 'facebook'
+                    })
+                });
+
+                if (response.status === 401) {
+                    result.innerHTML = `<div class="test-result error">❌ Please <a href="login.html" style="color: white;">login as admin</a> first.</div>`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    facebookToken = data.integration.webhook_token;
+                    const webhookUrl = window.location.origin + '/crm/api/webhook.php?token=' + facebookToken;
+                    
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Facebook Integration Created!<br><br>
+                            <strong>Webhook URL:</strong><br>
+                            <input type="text" value="${webhookUrl}" readonly 
+                                style="width: 100%; padding: 10px; margin: 10px 0; background: #1a1a2e; color: white; border: 1px solid #0f3460; border-radius: 5px;">
+                            <button onclick="copyToClipboard('${webhookUrl}')">📋 Copy URL</button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('test-facebook-btn').disabled = false;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testFacebookWebhook() {
+            const result = document.getElementById('facebook-result');
+            
+            if (!facebookToken) {
+                result.innerHTML = `<div class="test-result error">❌ Please create Facebook integration first!</div>`;
+                return;
+            }
+
+            try {
+                // Facebook Lead Ads format
+                const facebookPayload = {
+                    field_data: [
+                        { name: "full_name", values: ["Sarah Johnson"] },
+                        { name: "email", values: ["sarah@example.com"] },
+                        { name: "phone_number", values: ["555-FACEBOOK"] }
+                    ]
+                };
+
+                const response = await fetch(`api/webhook.php?token=${facebookToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(facebookPayload)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Facebook Lead Created!<br>
+                            Lead ID: ${data.lead_id}<br>
+                            Name: Sarah Johnson<br>
+                            Source: facebook<br><br>
+                            <a href="index.html" style="color: white;">View in Dashboard</a>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Google Ads Testing
+        let googleToken = null;
+
+        async function createGoogleIntegration() {
+            const result = document.getElementById('google-result');
+            try {
+                const response = await fetch('api/integrations.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Google Ads ' + new Date().toLocaleTimeString(),
+                        platform: 'google_ads'
+                    })
+                });
+
+                if (response.status === 401) {
+                    result.innerHTML = `<div class="test-result error">❌ Please <a href="login.html" style="color: white;">login as admin</a> first.</div>`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    googleToken = data.integration.webhook_token;
+                    const webhookUrl = window.location.origin + '/crm/api/webhook.php?token=' + googleToken;
+                    
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Google Ads Integration Created!<br><br>
+                            <strong>Webhook URL:</strong><br>
+                            <input type="text" value="${webhookUrl}" readonly 
+                                style="width: 100%; padding: 10px; margin: 10px 0; background: #1a1a2e; color: white; border: 1px solid #0f3460; border-radius: 5px;">
+                            <button onclick="copyToClipboard('${webhookUrl}')">📋 Copy URL</button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('test-google-btn').disabled = false;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testGoogleWebhook() {
+            const result = document.getElementById('google-result');
+            
+            if (!googleToken) {
+                result.innerHTML = `<div class="test-result error">❌ Please create Google Ads integration first!</div>`;
+                return;
+            }
+
+            try {
+                // Google Ads format
+                const googlePayload = {
+                    form_data: [
+                        { key: "full_name", value: "Mike Anderson" },
+                        { key: "email", value: "mike@example.com" },
+                        { key: "phone", value: "555-GOOGLE" }
+                    ]
+                };
+
+                const response = await fetch(`api/webhook.php?token=${googleToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(googlePayload)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Google Ads Lead Created!<br>
+                            Lead ID: ${data.lead_id}<br>
+                            Name: Mike Anderson<br>
+                            Source: google_ads<br><br>
+                            <a href="index.html" style="color: white;">View in Dashboard</a>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="test-result error">❌ ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="test-result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

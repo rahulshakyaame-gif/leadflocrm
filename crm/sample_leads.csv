@@ -1,0 +1,6 @@
+name,phone,email,source,status
+John Doe,555-0101,john@example.com,Website,New
+Jane Smith,555-0102,jane@example.com,Referral,New
+Bob Johnson,555-0103,bob@example.com,Social Media,Contacted
+Alice Williams,555-0104,alice@example.com,Cold Call,New
+Charlie Brown,555-0105,charlie@example.com,Website,Interested

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LeadFlow CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>LeadFlow</span>
+        </div>
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active" data-view="dashboard">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" data-view="leads">
+            <i class="fa-solid fa-users"></i>
+            <span>Leads</span>
+          </a>
+          <a href="#" class="nav-item" data-view="kanban">
+            <i class="fa-solid fa-table-columns"></i>
+            <span>Kanban</span>
+          </a>
+          <a href="#" class="nav-item" data-view="calls">
+            <i class="fa-solid fa-phone"></i>
+            <span>Call History</span>
+          </a>
+          <a href="admin.html" class="nav-item" id="admin-link" style="display: none;">
+            <i class="fa-solid fa-users-gear"></i>
+            <span>Team Management</span>
+          </a>
+          <a href="import.html" class="nav-item" id="import-link" style="display: none;">
+            <i class="fa-solid fa-file-import"></i>
+            <span>Import Leads</span>
+          </a>
+          <a href="integrations.html" class="nav-item" id="integrations-link" style="display: none;">
+            <i class="fa-solid fa-plug"></i>
+            <span>Integrations</span>
+          </a>
+        </nav>
+        <div class="user-profile">
+          <div class="avatar">A</div>
+          <div class="info">
+            <span class="name">Admin User</span>
+            <span class="role">Manager</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="top-header">
+          <h1 id="page-title">Dashboard</h1>
+          <div class="actions">
+            <button class="btn-primary" id="add-lead-btn">
+              <i class="fa-solid fa-plus"></i> Add Lead
+            </button>
+          </div>
+        </header>
+
+        <div id="view-container" class="view-container">
+          <!-- Views will be injected here by JS -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div class="modal" id="lead-modal">
+        <div class="modal-header">
+          <h2 id="modal-title">Add New Lead</h2>
+          <button class="close-modal"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <form id="lead-form">
+            <input type="hidden" name="id" id="lead-id" />
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="name" id="lead-name" required />
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" name="phone" id="lead-phone" required />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="email" id="lead-email" />
+            </div>
+            <div class="form-group">
+              <label>Source</label>
+              <select name="source" id="lead-source">
+                <option value="Website">Website</option>
+                <option value="Referral">Referral</option>
+                <option value="Cold Call">Cold Call</option>
+                <option value="Ads">Ads</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select name="status" id="lead-status">
+                <option value="New">New</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Interested">Interested</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Lost">Lost</option>
+                <option value="Converted">Converted</option>
+              </select>
+            </div>
+            <div class="form-group" id="assign-group" style="display: none;">
+              <label>Assign To</label>
+              <select name="assigned_to" id="lead-assigned-to">
+                <option value="">Unassigned</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary close-modal">
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">Save Lead</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal" id="call-modal">
+        <div class="modal-header">
+          <h2>Log Call</h2>
+          <button class="close-modal"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <form id="call-form">
+            <input type="hidden" name="lead_id" id="call-lead-id" />
+            <div class="form-group">
+              <label>Lead Name</label>
+              <input type="text" id="call-lead-name" readonly disabled />
+            </div>
+            <div class="form-group">
+              <label>Outcome</label>
+              <select name="outcome" id="call-outcome" required>
+                <option value="Connected">Connected</option>
+                <option value="No Answer">No Answer</option>
+                <option value="Busy">Busy</option>
+                <option value="Left Voicemail">Left Voicemail</option>
+                <option value="Follow-up Scheduled">Follow-up Scheduled</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Duration (seconds)</label>
+              <input
+                type="number"
+                name="duration"
+                id="call-duration"
+                value="0"
+              />
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea name="notes" id="call-notes" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary close-modal">
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">Log Call</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
